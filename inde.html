@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pizarra Virtual y Rendimiento - UNCP</title>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- jsPDF para exportar a PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main class="app-shell">
+    <!-- Pestañas de Navegación (Layout Solicitado) -->
+    <nav class="tabs-nav" aria-label="Navegación principal de módulos">
+      <button class="tab-btn is-active" data-target="tab-whiteboard" type="button"><i data-lucide="pen-tool"></i> Lienzo</button>
+      <button class="tab-btn" data-target="tab-dom-anim" type="button"><i data-lucide="gauge"></i> Velocidad DOM</button>
+      <button class="tab-btn" data-target="tab-raf" type="button"><i data-lucide="orbit"></i> 2D + rAF</button>
+      <button class="tab-btn" data-target="tab-performance" type="button"><i data-lucide="activity"></i> Rendimiento</button>
+    </nav>
+
+    <!-- TAB 1: PIZARRA EXCALIDRAW & CONTADOR DE VISITAS -->
+    <section id="tab-whiteboard" class="tab-content is-active">
+      <header class="excalidraw-toolbar">
+        <div class="toolbar-group">
+          <button id="toolSelect" class="tool-btn is-active" type="button" title="Seleccionar"><i data-lucide="mouse-pointer"></i></button>
+          <button id="toolPencil" class="tool-btn" type="button" title="Lápiz"><i data-lucide="pencil"></i></button>
+          <button id="toolRectangle" class="tool-btn" type="button" title="Rectángulo"><i data-lucide="square"></i></button>
+          <button id="toolCircle" class="tool-btn" type="button" title="Círculo"><i data-lucide="circle"></i></button>
+          <button id="toolText" class="tool-btn" type="button" title="Texto"><i data-lucide="type"></i></button>
+          <button id="toolEraser" class="tool-btn" type="button" title="Borrador"><i data-lucide="eraser"></i></button>
+        </div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-group">
+          <!-- Contador de visitas requerido -->
+          <div class="visit-counter-badge" title="Visitas totales a la página">
+            Visitas: <strong id="visitCount">1</strong>
+          </div>
+          <button id="clearCanvas" class="action-btn" type="button"><i data-lucide="trash-2"></i> Limpiar</button>
+          <button id="exportPng" class="action-btn" type="button"><i data-lucide="image"></i> PNG</button>
+        </div>
+      </header>
+
+      <div class="canvas-container">
+        <canvas id="whiteboardCanvas"></canvas>
+        <div id="activeToolIndicator" class="tool-indicator"><i id="indicatorIcon" data-lucide="mouse-pointer"></i></div>
+        
+        <aside class="properties-panel">
+          <h3>Propiedades</h3>
+          <div class="prop-group">
+            <label for="strokeWidthRange">Grosor de Trazo</label>
+            <div class="range-row">
+              <input id="strokeWidthRange" type="range" min="1" max="25" value="3">
+              <output id="strokeWidthValue">3px</output>
+            </div>
+            <p id="strokeError" class="validation-message"></p>
+          </div>
+          <div class="prop-group">
+            <label for="strokeColorPicker">Color de Línea</label>
+            <input id="strokeColorPicker" type="color" value="#1e1e1e">
+          </div>
+          <div class="prop-group">
+            <label for="fillColorPicker">Color de Relleno</label>
+            <input id="fillColorPicker" type="color" value="#e0f2fe">
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- TAB 2: VELOCIDAD CON DOM Y ANIMACIONES DIFERENCIADAS -->
+    <section id="tab-dom-anim" class="tab-content">
+      <div class="module-container">
+        <h2>Optimización del DOM y Animaciones Interactivas</h2>
+        <p>Selecciona un elemento estructural para aplicar animaciones dinámicas optimizadas mediante el DOM y clases CSS.</p>
+        
+        <div class="dom-elements-grid">
+          <button class="anim-card" data-anim="bounce" type="button"><span>Nodo vectorial</span><small>Rebote vertical</small></button>
+          <button class="anim-card" data-anim="pulse" type="button"><span>Canvas buffer</span><small>Escala pulsante</small></button>
+          <button class="anim-card" data-anim="rotate" type="button"><span>Event loop sync</span><small>Rotación continua</small></button>
+        </div>
+        <div class="speed-control">
+          <label for="domSpeed">Velocidad de la animación DOM</label>
+          <input id="domSpeed" type="range" min="0.25" max="3" step="0.25" value="1">
+          <output id="domSpeedValue">1x</output>
+        </div>
+        <p id="domStatus" class="status-line" aria-live="polite">Selecciona un módulo para iniciar su animación.</p>
+      </div>
+    </section>
+
+    <section id="tab-raf" class="tab-content">
+      <div class="module-container raf-layout">
+        <div>
+          <p class="eyebrow">Experimento interactivo</p>
+          <h2>Animación 2D con requestAnimationFrame</h2>
+          <p>Mueve el cursor dentro del campo para atraer las partículas. El contador usa el tiempo real entre cuadros, no un valor fijo.</p>
+          <div class="raf-actions">
+            <button id="rafToggle" class="action-btn primary" type="button"><i data-lucide="pause"></i> Pausar</button>
+            <button id="rafReset" class="action-btn" type="button"><i data-lucide="rotate-ccw"></i> Reiniciar</button>
+          </div>
+        </div>
+        <div class="raf-stage-wrap">
+          <canvas id="rafCanvas" aria-label="Animación 2D interactiva"></canvas>
+          <span class="raf-badge"><strong id="rafFps">0</strong> FPS</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: RENDIMIENTO, RECURSOS, RAM Y MEMORY LEAKS -->
+    <section id="tab-performance" class="tab-content">
+      <div class="module-container">
+        <h2>Monitoreo de Rendimiento y Fugas de Memoria</h2>
+        <div class="performance-loader" aria-live="polite">
+          <span class="loader-orbit" aria-hidden="true"></span>
+          <div><strong id="perfLoadTitle">Extrayendo datos</strong><span id="perfLoadStatus">Sincronizando con el navegador<span class="loading-dots">...</span></span></div>
+          <button id="refreshPerformance" class="action-btn" type="button"><i data-lucide="refresh-cw"></i> Actualizar</button>
+        </div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span>FPS (Canvas Loop):</span>
+            <strong id="perfFps">60</strong>
+          </div>
+          <div class="metric-card">
+            <span>Heap JS usado:</span>
+            <strong id="perfMemory">Calculando...</strong>
+          </div>
+          <div class="metric-card">
+            <span>RAM del dispositivo:</span>
+            <strong id="perfRam">No expuesta</strong>
+          </div>
+          <div class="metric-card">
+            <span>Prueba de referencias:</span>
+            <strong id="perfLeaks">Sin señales</strong>
+          </div>
+        </div>
+        <div class="chart-panel">
+          <div class="chart-heading"><div><h3>Carga en tiempo real</h3><p>Últimas muestras del bucle requestAnimationFrame</p></div><span id="chartLegend"><i></i> FPS real</span></div>
+          <canvas id="performanceChart" aria-label="Gráfico de FPS en tiempo real"></canvas>
+        </div>
+        <div class="resource-panel">
+          <h3>Recursos observables</h3>
+          <dl>
+            <div><dt>API gráfica</dt><dd>Canvas 2D</dd></div>
+            <div><dt>Reloj de animación</dt><dd>requestAnimationFrame</dd></div>
+            <div><dt>Heap y RAM</dt><dd id="resourceNote">El navegador decide si los expone</dd></div>
+            <div><dt>Control de fugas</dt><dd>Listeners registrados una sola vez</dd></div>
+          </dl>
+        </div>
+        <p class="note">La memoria del proceso y una fuga real requieren herramientas del navegador. Esta vista muestra el heap si Chromium expone <code>performance.memory</code> y reporta sólo señales observables, no una garantía absoluta.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
